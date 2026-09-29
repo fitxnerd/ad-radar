@@ -69,7 +69,11 @@ def analyze_page(state: dict, page: dict, run: dict, today: str) -> dict:
     if run.get("baseline"):  # first week: "new" = started in the last 7 days
         new = [a for a in active if a["days"] <= 7]
     else:
-        new = [a for a in active if a["key"] in new_keys]
+        # "Started" means launched since the last run, by Meta's own start date. An older ad
+        # we merely read for the first time (a wider sample, say) is not a new launch.
+        prev = [r["date"] for r in state["runs"] if pid in r.get("pages", {}) and r["date"] < today]
+        window = (t - date.fromisoformat(max(prev))).days if prev else 7
+        new = [a for a in active if a["key"] in new_keys and a["days"] <= max(window, 1)]
     killed = [state["ads"][k] for k in run.get("killed", []) if k in state["ads"]]
     for a in killed:
         a["verdict"] = killed_verdict(a["days"])

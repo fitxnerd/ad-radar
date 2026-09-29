@@ -294,7 +294,7 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line);
     <div class="card kpi"><div class="eyebrow">Started this week</div><div class="v num up">+{{ cat.totals.new }}</div><div class="s">new creatives</div></div>
     <div class="card kpi"><div class="eyebrow">Killed this week</div>
       {% if baseline %}<div class="v wait">From week 2</div><div class="s">tracking starts next Monday</div>
-      {% else %}<div class="v num down">−{{ cat.totals.killed }}</div><div class="s">creatives switched off</div>{% endif %}</div>
+      {% else %}<div class="v num {{ 'down' if cat.totals.killed else '' }}">{{ '−' ~ cat.totals.killed if cat.totals.killed else '0' }}</div><div class="s">creatives switched off</div>{% endif %}</div>
     <div class="card kpi"><div class="eyebrow">New concepts</div><div class="v num">{{ cat.totals.new_concepts }}</div><div class="s">new arguments, not just variants</div></div>
   </div>
 
