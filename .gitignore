@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+data/*/work/
+data/*/contact_sheet.jpg
+data/*/state.tmp
+.DS_Store
+
+# Each copy's own data lives only in that copy. The weekly workflow force-adds
+# these in the owner's private repo; ignoring them here keeps any test data out
+# of the shared template.
+data/
+reports/

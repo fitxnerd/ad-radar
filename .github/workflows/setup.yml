@@ -1,0 +1,91 @@
+name: Set up Ad Radar
+
+# This is the setup form. In your repo: Actions tab → "Set up Ad Radar" →
+# "Run workflow", fill in the fields, and click the green button.
+# Everything you type stays in this private repo; it is saved to
+# clients/my-brand.yaml and sent nowhere else. Run it again any time to
+# change your competitors or emails.
+
+on:
+  workflow_dispatch:
+    inputs:
+      brand_name:
+        description: "1. Your brand name"
+        required: true
+        type: string
+      brand_ad_library:
+        description: "2. Your brand's Meta Ad Library page link (optional: leave blank and we look it up by name)"
+        required: false
+        type: string
+      category:
+        description: "3. Your category in one line, e.g. Actives-led skincare"
+        required: false
+        type: string
+      country:
+        description: "4. Country to read ads in"
+        required: true
+        type: choice
+        default: IN
+        options: [IN, US, GB, AE, SG, AU, CA, ID]
+      competitors:
+        description: "5. Competitor names, separated by commas (up to 6), e.g. Foxtale, The Derma Co, Deconstruct"
+        required: true
+        type: string
+      competitor_urls:
+        description: "6. Optional: their Ad Library page links, same order, separated by spaces"
+        required: false
+        type: string
+      emails:
+        description: "7. Email(s) to send the Monday dashboard to, separated by commas"
+        required: true
+        type: string
+      run_now:
+        description: "Run the first report now (takes 20 to 40 minutes)"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write   # save clients/my-brand.yaml in this repo
+  actions: write    # start the first weekly run right away
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Save your settings
+        id: save
+        env:  # passed as env vars, never pasted into shell code
+          BRAND_NAME: ${{ inputs.brand_name }}
+          BRAND_AD_LIBRARY: ${{ inputs.brand_ad_library }}
+          CATEGORY: ${{ inputs.category }}
+          COUNTRY: ${{ inputs.country }}
+          COMPETITORS: ${{ inputs.competitors }}
+          COMPETITOR_URLS: ${{ inputs.competitor_urls }}
+          EMAILS: ${{ inputs.emails }}
+          HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
+          HAS_SMTP: ${{ secrets.SMTP_USER != '' && secrets.SMTP_PASSWORD != '' }}
+        run: |
+          pip install -q pyyaml
+          python -m radar.setup_brand
+
+      - name: Commit settings to this repo
+        run: |
+          git config user.name "ad-radar-bot"
+          git config user.email "ad-radar-bot@users.noreply.github.com"
+          git add clients
+          git diff --cached --quiet || git commit -m "Ad Radar: update brand settings"
+          git push
+
+      - name: Start the first report
+        if: inputs.run_now && steps.save.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run weekly.yml --ref "${{ github.ref_name }}"

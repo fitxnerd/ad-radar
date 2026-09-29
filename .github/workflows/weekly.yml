@@ -1,0 +1,80 @@
+name: Weekly Ad Radar
+
+on:
+  schedule:
+    - cron: "30 1 * * 1"   # Mondays 01:30 UTC = 07:00 IST (GitHub may start it a little late)
+  workflow_dispatch:        # "Run workflow" button for a manual run
+
+permissions:
+  contents: write           # to commit last week's state back, which powers new/killed diffs
+
+concurrency:
+  group: ad-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check this copy has been set up
+        id: check
+        run: |
+          if ls clients/*.yaml 2>/dev/null | grep -qv '/_'; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not set up yet: run \"Set up Ad Radar\" from the Actions tab first." >> "$GITHUB_STEP_SUMMARY"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.configured == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python deps
+        if: steps.check.outputs.configured == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Ensure Google Chrome (real Chrome, not bundled Chromium)
+        if: steps.check.outputs.configured == 'true'
+        run: google-chrome --version || python -m playwright install --with-deps chrome
+
+      - name: Install Claude Code CLI
+        if: steps.check.outputs.configured == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run radar
+        if: steps.check.outputs.configured == 'true'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}   # from `claude setup-token` (uses your Pro/Max plan)
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}               # optional alternative: pay-as-you-go API
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          CLASSIFY_MODEL: ${{ vars.CLASSIFY_MODEL || 'haiku' }}
+          BRIEF_MODEL: ${{ vars.BRIEF_MODEL || 'sonnet' }}
+        run: python run.py
+
+      - name: Save state for next week
+        if: always() && steps.check.outputs.configured == 'true'
+        run: |
+          git config user.name "ad-radar-bot"
+          git config user.email "ad-radar-bot@users.noreply.github.com"
+          # data/ and reports/ are ignored in the template so no one's data ships with it;
+          # in your own copy they are force-added, which is what powers next week's diff.
+          for d in data reports; do
+            if [ -d "$d" ]; then git add -f "$d"; fi
+          done
+          git diff --cached --quiet || git commit -m "Ad Radar: week of $(date -u +%F)"
+          git push
+
+      - name: Keep dashboards as a downloadable artifact
+        if: always() && steps.check.outputs.configured == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ad-radar-dashboards
+          path: reports/**/latest.html
+          retention-days: 30

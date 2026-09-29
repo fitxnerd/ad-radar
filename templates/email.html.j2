@@ -1,0 +1,46 @@
+<!doctype html>
+<html><body style="margin:0;background:#f4f3ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0b0b0b;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3ef;"><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fcfcfb;border:1px solid #e2e0d9;border-radius:14px;">
+<tr><td style="padding:24px 24px 8px;">
+  <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7c7b76;">Competitor Creative Radar · Week of {{ today | nice_date }}</div>
+  <div style="font-size:21px;font-weight:700;line-height:1.3;margin:10px 0 12px;">{{ brief.headline if brief else brand ~ ': weekly competitor read' }}</div>
+  {% if brief and brief.so_what %}<ul style="margin:0 0 8px;padding-left:18px;color:#52514e;font-size:15px;line-height:1.5;">{% for b in brief.so_what %}<li style="margin:5px 0;">{{ b }}</li>{% endfor %}</ul>{% endif %}
+</td></tr>
+<tr><td style="padding:8px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;border-collapse:collapse;">
+    <tr style="color:#7c7b76;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;">
+      <td style="padding:6px 4px;border-bottom:1px solid #e2e0d9;">Brand</td><td align="right" style="padding:6px 4px;border-bottom:1px solid #e2e0d9;">Live</td>
+      <td align="right" style="padding:6px 4px;border-bottom:1px solid #e2e0d9;">Started</td><td align="right" style="padding:6px 4px;border-bottom:1px solid #e2e0d9;">Killed</td>
+      <td align="right" style="padding:6px 4px;border-bottom:1px solid #e2e0d9;">Concepts</td></tr>
+    {% for p in pages %}
+    <tr{% if p.role == 'you' %} style="background:#e3eefb;"{% endif %}>
+      <td style="padding:7px 4px;border-bottom:1px solid #e2e0d9;font-weight:600;">{{ p.name }}{% if p.role == 'you' %} (you){% endif %}</td>
+      <td align="right" style="padding:7px 4px;border-bottom:1px solid #e2e0d9;">{{ p.active }}</td>
+      <td align="right" style="padding:7px 4px;border-bottom:1px solid #e2e0d9;color:#0a6b0a;font-weight:600;">+{{ p.new_count }}</td>
+      <td align="right" style="padding:7px 4px;border-bottom:1px solid #e2e0d9;color:#a42a2a;font-weight:600;">{% if p.baseline %}<span style="color:#85858b;font-weight:400;">Week 2</span>{% else %}−{{ p.killed_count }}{% endif %}</td>
+      <td align="right" style="padding:7px 4px;border-bottom:1px solid #e2e0d9;">{{ p.n_concepts }}{% if p.new_concepts %} <span style="color:#0a6b0a;">(+{{ p.new_concepts | length }} new)</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</td></tr>
+{% if brief and brief.tests %}
+<tr><td style="padding:16px 24px 4px;">
+  <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7c7b76;margin-bottom:8px;">Tests to brief this week</div>
+  {% for t in brief.tests %}
+  <div style="border:1px solid #e2e0d9;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+    <div style="font-size:14px;font-weight:650;line-height:1.35;">{{ loop.index }}. {{ t.hypothesis }}</div>
+    <div style="margin-top:8px;background:#efeee9;border-radius:8px;padding:9px 11px;font-weight:700;">“{{ t.hook }}”</div>
+    <div style="margin-top:6px;font-size:12.5px;color:#7c7b76;">{{ t.format }} · {{ t.evidence }}</div>
+  </div>
+  {% endfor %}
+</td></tr>
+{% endif %}
+<tr><td style="padding:12px 24px 24px;font-size:13.5px;color:#52514e;line-height:1.5;">
+  <b>The full dashboard is attached</b> ({{ attachment_name }}): open it in any browser to see what each competitor started, killed and keeps running, with thumbnails, concept boards, the argument map and white space.
+  {% if baseline %}<br><br><i>This is the baseline week. Kills and true week-over-week changes start next Monday.</i>{% endif %}
+</td></tr>
+</table>
+<div style="font-size:11.5px;color:#7c7b76;margin-top:12px;">Ad Radar · built on the public Meta Ad Library · {{ generated }}</div>
+</td></tr></table>
+</body></html>

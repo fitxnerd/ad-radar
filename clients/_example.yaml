@@ -1,0 +1,22 @@
+# Ad Radar brand settings: an example for reference.
+# The easy way: Actions tab -> "Set up Ad Radar" -> Run workflow, and fill the form.
+# It writes clients/my-brand.yaml for you. This file itself is ignored (it starts with "_").
+
+brand:
+  name: Minimalist
+  # Optional but recommended: your page's Ad Library URL (open the Ad Library,
+  # search your brand, click your page, copy the URL). A page ID also works.
+  ad_library: ""
+
+category: Actives-led skincare, India    # one line; helps Claude read the category
+
+country: IN                               # Ad Library country filter
+
+competitors:                              # 3-6 brands. Name alone works; a URL is more precise.
+  - name: The Derma Co
+    ad_library: ""
+  - name: Foxtale
+  - name: Deconstruct
+
+emails:                                   # who gets the Monday email
+  - growth@yourbrand.com

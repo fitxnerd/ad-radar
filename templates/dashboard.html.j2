@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ad Radar · {{ brand }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f5f2; --surface-1: #ffffff; --surface-2: #f3f2ee; --surface-3: #ebe9e3; --line: #e7e5df; --line-strong: #d9d6ce;
+  --ink: #111113; --ink-2: #4a4a4f; --ink-3: #85858b;
+  --hero: #131316; --hero-ink: #ffffff; --hero-ink-2: #b9b9c0; --hero-line: #2a2a30;
+  --accent: #2a78d6; --accent-soft: #edf4fd; --accent-ink: #1c5cab;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --seq-1: #e3eefb; --seq-2: #b7d3f6; --seq-3: #6da7ec; --seq-4: #2a78d6;
+  --good: #0a7a0a; --good-soft: #e8f5e8; --bad: #b42f2f; --bad-soft: #fbeaea; --gold: #8a5a00; --gold-soft: #fff4d9;
+  --shadow: 0 1px 2px rgba(17,17,19,.04), 0 6px 24px rgba(17,17,19,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --bg: #0e0e10; --surface-1: #18181b; --surface-2: #202024; --surface-3: #2a2a2f; --line: #2c2c31; --line-strong: #3a3a40;
+    --ink: #f5f5f4; --ink-2: #c3c2bd; --ink-3: #8e8d88;
+    --hero: #1d1d22; --hero-ink: #ffffff; --hero-ink-2: #b9b9c0; --hero-line: #33333a;
+    --accent: #3987e5; --accent-soft: #17243a; --accent-ink: #86b6ef;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --seq-1: #1a2740; --seq-2: #1c4a88; --seq-3: #2f73c9; --seq-4: #6da7ec;
+    --good: #7fd27f; --good-soft: #15291a; --bad: #f09a9a; --bad-soft: #341b1b; --gold: #f2c66b; --gold-soft: #33290f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e0e10; --surface-1: #18181b; --surface-2: #202024; --surface-3: #2a2a2f; --line: #2c2c31; --line-strong: #3a3a40;
+  --ink: #f5f5f4; --ink-2: #c3c2bd; --ink-3: #8e8d88;
+  --hero: #1d1d22; --hero-ink: #ffffff; --hero-ink-2: #b9b9c0; --hero-line: #33333a;
+  --accent: #3987e5; --accent-soft: #17243a; --accent-ink: #86b6ef;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+  --seq-1: #1a2740; --seq-2: #1c4a88; --seq-3: #2f73c9; --seq-4: #6da7ec;
+  --good: #7fd27f; --good-soft: #15291a; --bad: #f09a9a; --bad-soft: #341b1b; --gold: #f2c66b; --gold-soft: #33290f;
+  --shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 40px 32px 80px; }
+a { color: inherit; }
+h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
+.num { font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+.muted { color: var(--ink-3); }
+.card { background: var(--surface-1); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+
+/* header */
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.top h1 { font-size: 34px; font-weight: 800; margin-top: 8px; }
+.top .sub { color: var(--ink-2); margin-top: 6px; font-size: 14px; }
+.tracking { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.tracking .eyebrow { text-align: right; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pill { font-size: 12.5px; font-weight: 500; padding: 5px 11px; border-radius: 999px; background: var(--surface-1); border: 1px solid var(--line); color: var(--ink-2); }
+.theme-btn { position: absolute; top: 20px; right: 24px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-1); color: var(--ink-2); cursor: pointer; display: grid; place-items: center; }
+nav.jump { position: sticky; top: 0; z-index: 5; display: flex; gap: 4px; flex-wrap: wrap; margin: 28px -32px 0; padding: 10px 32px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+nav.jump a { font-size: 13px; font-weight: 500; text-decoration: none; color: var(--ink-2); padding: 5px 11px; border-radius: 8px; white-space: nowrap; }
+nav.jump a:hover { background: var(--surface-3); color: var(--ink); }
+
+/* kpis + hero */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+.kpi { padding: 18px 20px; }
+.kpi .v { font-size: 36px; font-weight: 750; letter-spacing: -0.03em; line-height: 1; margin-top: 12px; }
+.kpi .v.wait { font-size: 20px; font-weight: 650; letter-spacing: -0.01em; color: var(--ink-3); padding: 8px 0 8px; }
+.kpi .s { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
+.up { color: var(--good); } .down { color: var(--bad); }
+.hero { margin-top: 14px; background: var(--hero); color: var(--hero-ink); border-radius: 18px; padding: 30px 32px; }
+.hero .eyebrow { color: var(--hero-ink-2); }
+.hero .headline { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; margin-top: 10px; max-width: 860px; text-wrap: balance; }
+.sowhat { list-style: none; margin: 24px 0 0; padding: 22px 0 0; border-top: 1px solid var(--hero-line); display: grid; grid-template-columns: 1fr 1fr; gap: 14px 36px; }
+.sowhat li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; color: var(--hero-ink-2); font-size: 14.5px; line-height: 1.5; }
+.sowhat .n { width: 22px; height: 22px; border-radius: 6px; background: var(--hero-line); color: var(--hero-ink); font-size: 11.5px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+.baseline { display: inline-block; margin-top: 22px; font-size: 12.5px; color: var(--hero-ink-2); background: var(--hero-line); border-radius: 8px; padding: 7px 11px; }
+
+/* sections */
+section { margin-top: 56px; scroll-margin-top: 64px; }
+.sec-head { display: grid; grid-template-columns: 40px 1fr; align-items: baseline; margin-bottom: 18px; }
+.sec-head .idx { font-size: 13px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.sec-head h2 { font-size: 22px; font-weight: 700; }
+.sec-head p { margin: 6px 0 0; color: var(--ink-3); font-size: 14px; max-width: 760px; }
+
+/* tables */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; padding: 14px 12px 10px; border-bottom: 1px solid var(--line); vertical-align: bottom; line-height: 1.3; }
+td { padding: 15px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th:first-child, td:first-child { padding-left: 20px; } th:last-child, td:last-child { padding-right: 20px; }
+td.r { white-space: nowrap; }
+.score th.r { max-width: 84px; }
+.score td .chip { white-space: normal; line-height: 1.3; }
+tbody tr:last-child td { border-bottom: 0; }
+.r { text-align: right; }
+tr.you td { background: var(--accent-soft); }
+.brand-cell { font-weight: 600; white-space: nowrap; }
+.you-tag { display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: .08em; background: var(--accent); color: #fff; border-radius: 4px; padding: 2px 5px; margin-left: 8px; vertical-align: 2px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 500; border-radius: 6px; padding: 3px 8px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; border: 1px solid var(--line); }
+.chip.solid { background: var(--surface-1); }
+.brand-row h3 .chip { white-space: normal; }
+.chip.new { background: var(--good-soft); color: var(--good); border-color: transparent; font-weight: 600; }
+.chip.dead { background: var(--bad-soft); color: var(--bad); border-color: transparent; font-weight: 600; }
+.spark { display: block; margin-top: 6px; }
+.soft { color: var(--ink-3); font-weight: 400; }
+
+/* snapshots */
+.snaps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.snap { padding: 22px 24px; display: flex; flex-direction: column; }
+.snap.you { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.snap-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.snap-head h3 { font-size: 18px; font-weight: 700; }
+.snap .read { color: var(--ink-2); font-size: 14px; margin: 8px 0 0; }
+.snap .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.snap .stats div { font-size: 12px; color: var(--ink-3); }
+.snap .stats b { display: block; font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; line-height: 1.2; }
+.snap-cols { display: grid; grid-template-columns: 1fr 1.3fr; gap: 28px; margin-top: 16px; }
+.mini-title { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
+.abar { margin-bottom: 12px; }
+.abar .lbl { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+.abar .track { height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
+.abar .fill { height: 100%; background: var(--series-1); border-radius: 3px; }
+.clist { list-style: none; margin: 0; padding: 0; }
+.clist li { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.35; }
+.clist li:first-child { border-top: 0; padding-top: 0; }
+.clist .vc { min-width: 28px; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-2); background: var(--surface-2); border-radius: 6px; padding: 2px 7px; font-variant-numeric: tabular-nums; }
+.clist .nw { font-size: 9.5px; font-weight: 700; letter-spacing: .06em; color: var(--good); background: var(--good-soft); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 1px; }
+
+/* ad strips */
+.brand-row { margin-bottom: 28px; }
+.brand-row h3 { font-size: 15px; font-weight: 650; margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.brand-row h3 .count { font-weight: 500; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+.strip { display: grid; grid-auto-flow: column; grid-auto-columns: 196px; gap: 14px; overflow-x: auto; padding: 2px 2px 12px; scroll-snap-type: x proximity; }
+.ad { background: var(--surface-1); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; text-decoration: none; scroll-snap-align: start; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
+.ad:hover { border-color: var(--accent); transform: translateY(-2px); }
+.ad .img { aspect-ratio: 4/5; background: var(--surface-2); position: relative; }
+.ad .img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ad .img .noimg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); font-size: 12px; padding: 14px; text-align: center; }
+.ad .badge { position: absolute; top: 8px; left: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 7px; }
+.ad .fmt { position: absolute; bottom: 8px; left: 8px; font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; background: rgba(17,17,19,.72); color: #fff; border-radius: 5px; padding: 3px 6px; }
+.b-new { background: var(--good-soft); color: var(--good); }
+.b-kill { background: var(--bad-soft); color: var(--bad); }
+.b-win { background: var(--gold-soft); color: var(--gold); }
+.ad .body { padding: 12px 13px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.ad .concept { font-size: 13.5px; font-weight: 650; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ad .hook { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ad .meta { margin-top: auto; padding-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+.ad .meta .chip { font-size: 11px; padding: 2px 6px; }
+.empty { color: var(--ink-3); font-size: 14px; padding: 16px 20px; background: var(--surface-1); border: 1px dashed var(--line-strong); border-radius: 12px; }
+
+/* argument map */
+.map { padding: 4px 24px 8px; }
+.mrow { display: grid; grid-template-columns: 190px 1fr 190px 150px; gap: 24px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+.mrow.head { border-top: 0; padding: 16px 0 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.mrow .an { font-weight: 600; font-size: 14px; }
+.mrow .bar { display: flex; align-items: center; gap: 12px; }
+.mrow .bar .track { flex: 1; height: 10px; background: var(--surface-3); border-radius: 5px; overflow: hidden; }
+.mrow .bar .fill { height: 100%; background: var(--series-1); border-radius: 5px; }
+.mrow .bar .v { width: 38px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 14px; }
+.mrow .lead { font-size: 13.5px; font-weight: 500; } .mrow .lead span { color: var(--ink-3); font-variant-numeric: tabular-nums; margin-left: 4px; font-weight: 400; }
+.idx-chip { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.idx-chip small { font-size: 11px; font-weight: 600; border-radius: 5px; padding: 2px 7px; }
+.over small { background: var(--good-soft); color: var(--good); }
+.under small { background: var(--gold-soft); color: var(--gold); }
+.par small { background: var(--surface-2); color: var(--ink-2); }
+.ws-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 16px; }
+.ws { padding: 18px 20px; border: 1px dashed color-mix(in srgb, var(--good) 55%, transparent); background: var(--good-soft); border-radius: 14px; }
+.ws .who { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--good); }
+.ws .t { font-weight: 700; font-size: 16px; margin-top: 6px; }
+.ws p { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-2); }
+details.more { margin-top: 18px; }
+details.more summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--accent-ink); list-style: none; display: inline-flex; gap: 6px; align-items: center; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::before { content: "+"; width: 18px; height: 18px; border-radius: 5px; background: var(--accent-soft); display: grid; place-items: center; font-size: 13px; }
+details.more[open] summary::before { content: "×"; }
+.heat { table-layout: fixed; min-width: 960px; }
+.heat th, .heat td { text-align: center; padding: 8px 3px; }
+.heat th:first-child, .heat td:first-child { width: 130px; text-align: left; padding-left: 16px; }
+.heat th { font-size: 10.5px; text-transform: none; letter-spacing: 0; white-space: normal; line-height: 1.25; }
+.cell { border-radius: 6px; padding: 6px 2px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.h0 { color: var(--ink-3); font-weight: 400; } .h1 { background: var(--seq-1); } .h2 { background: var(--seq-2); } .h3 { background: var(--seq-3); color: #fff; } .h4 { background: var(--seq-4); color: #fff; }
+
+/* mix */
+.mix { padding: 10px 24px 18px; }
+.fmt-row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: center; padding: 9px 0; }
+.stack { display: flex; gap: 2px; height: 26px; }
+.stack span { display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; color: #fff; min-width: 2px; font-variant-numeric: tabular-nums; }
+.stack span:first-child { border-radius: 5px 0 0 5px; } .stack span:last-child { border-radius: 0 5px 5px 0; } .stack span:only-child { border-radius: 5px; }
+.m-static { background: var(--series-1); } .m-video { background: var(--series-2); } .m-carousel { background: var(--series-3); } .m-catalog { background: var(--series-4); color: #111 !important; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); align-items: center; padding-top: 14px; border-top: 1px solid var(--line); margin-top: 10px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+.top-item b { font-weight: 600; } .top-item span { color: var(--ink-3); font-variant-numeric: tabular-nums; margin-left: 6px; }
+
+/* tests */
+.tests { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.test { padding: 22px; display: flex; flex-direction: column; }
+.test .n { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.test .n b { font-size: 12px; font-weight: 700; letter-spacing: .1em; color: var(--accent-ink); }
+.test .hook { margin: 16px 0; padding: 16px 18px; background: var(--hero); color: var(--hero-ink); border-radius: 12px; font-size: 17px; font-weight: 650; line-height: 1.35; letter-spacing: -0.01em; }
+.test .hyp { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.test dl { margin: auto 0 0; padding-top: 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 72px 1fr; gap: 8px 12px; font-size: 13px; }
+.test .hyp + dl { margin-top: 16px; }
+.test dt { color: var(--ink-3); } .test dd { margin: 0; color: var(--ink); font-weight: 500; }
+.ask { counter-reset: q; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.ask li { counter-increment: q; display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: center; padding: 16px 20px; font-weight: 550; font-size: 15px; }
+.ask li::before { content: counter(q); width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink); font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+.notes { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.notes li { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; padding: 18px 20px; }
+.notes li b { display: block; color: var(--ink); margin-bottom: 4px; font-size: 14px; }
+footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 960px) {
+  .snaps, .tests, .notes { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .mrow { grid-template-columns: 150px 1fr 150px; } .mrow .you-col { display: none; }
+}
+@media (max-width: 600px) {
+  .wrap { padding: 24px 16px 60px; }
+  .theme-btn { top: 16px; right: 16px; }
+  nav.jump { margin: 20px -16px 0; padding: 8px 16px; flex-wrap: nowrap; overflow-x: auto; }
+  .top h1 { font-size: 28px; } .tracking { align-items: flex-start; } .tracking .eyebrow { text-align: left; } .pills { justify-content: flex-start; }
+  .hero { padding: 24px 20px; } .hero .headline { font-size: 21px; }
+  .sowhat { grid-template-columns: 1fr; }
+  .kpi { padding: 16px; } .kpi .v { font-size: 28px; }
+  .snap { padding: 18px; } .snap-cols { grid-template-columns: 1fr; }
+  .sec-head { grid-template-columns: 1fr; } .sec-head .idx { margin-bottom: 4px; }
+  .mrow { grid-template-columns: 1fr; gap: 6px; } .mrow.head { display: none; }
+  .fmt-row { grid-template-columns: 1fr; gap: 6px; }
+  .strip { grid-auto-columns: 164px; }
+  .map, .mix { padding: 4px 16px 12px; }
+}
+</style>
+</head>
+<body>
+{% set reads = {} %}
+{% if brief and brief.competitors %}{% for c in brief.competitors %}{% set _ = reads.update({c.name: c}) %}{% endfor %}{% endif %}
+{% set ws_why = {} %}
+{% if brief and brief.white_space %}{% for w in brief.white_space %}{% if w is mapping %}{% set _ = ws_why.update({w.angle: w.why}) %}{% endif %}{% endfor %}{% endif %}
+
+{% macro adcard(a, kind) -%}
+<a class="ad" href="{{ a.library_url }}" target="_blank" rel="noopener" title="{{ (a | tag('summary')) or a.body[:200] }}">
+  <div class="img">
+    {% set src = thumb(a.key) %}
+    {% if src %}<img src="{{ src }}" alt="">{% else %}<div class="noimg">{{ a.body[:90] or 'No preview' }}</div>{% endif %}
+    {% if kind == 'new' %}<span class="badge b-new">New · {{ a.start_str | short_date }}</span>
+    {% elif kind == 'kill' %}<span class="badge b-kill">{{ a.verdict }} · {{ a.days }}d</span>
+    {% elif kind == 'win' %}<span class="badge b-win">{{ a.days }} days live</span>{% endif %}
+    <span class="fmt">{{ label(a.media) }}</span>
+  </div>
+  <div class="body">
+    <div class="concept">{{ a | tag('concept', 'Not yet tagged') }}</div>
+    {% if a | tag('hook_text') %}<div class="hook">“{{ a | tag('hook_text') }}”</div>{% endif %}
+    <div class="meta">
+      {% if a | tag('angle_family') %}<span class="chip" title="{{ angle_desc(a | tag('angle_family')) }}">{{ label(a | tag('angle_family')) }}</span>{% endif %}
+      {% if kind == 'win' or kind == 'new' %}<span class="chip" title="Position in Meta's own sort by impressions, for this brand">#{{ a.impression_rank }} by views</span>{% endif %}
+      {% if a.versions and a.versions > 1 %}<span class="chip" title="Meta shows this creative running as {{ a.versions }} ads">×{{ a.versions }}</span>{% endif %}
+    </div>
+  </div>
+</a>
+{%- endmacro %}
+
+<div class="wrap" style="position: relative">
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle light or dark theme" title="Toggle theme">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  <header class="top">
+    <div>
+      <div class="eyebrow">Competitor Creative Radar</div>
+      <h1>{{ brand }}</h1>
+      <div class="sub">Week of {{ today | nice_date }} · Meta Ad Library, {{ 'India' if country == 'IN' else country }}</div>
+    </div>
+    <div class="tracking">
+      <div class="eyebrow">Tracking</div>
+      <div class="pills">{% for c in competitors %}<span class="pill">{{ c }}</span>{% endfor %}</div>
+    </div>
+  </header>
+
+  <nav class="jump">
+    <a href="#scoreboard">Scoreboard</a><a href="#snapshots">Snapshots</a><a href="#started">Started</a><a href="#killed">Killed</a>
+    <a href="#winners">Winners</a><a href="#map">Argument map</a><a href="#mix">Formats</a><a href="#tests">Tests</a>
+  </nav>
+
+  <div class="kpis">
+    <div class="card kpi"><div class="eyebrow">Competitor ads live</div><div class="v num">{{ cat.totals.active }}</div><div class="s">across {{ competitors | length }} brands</div></div>
+    <div class="card kpi"><div class="eyebrow">Started this week</div><div class="v num up">+{{ cat.totals.new }}</div><div class="s">new creatives</div></div>
+    <div class="card kpi"><div class="eyebrow">Killed this week</div>
+      {% if baseline %}<div class="v wait">From week 2</div><div class="s">tracking starts next Monday</div>
+      {% else %}<div class="v num down">−{{ cat.totals.killed }}</div><div class="s">creatives switched off</div>{% endif %}</div>
+    <div class="card kpi"><div class="eyebrow">New concepts</div><div class="v num">{{ cat.totals.new_concepts }}</div><div class="s">new arguments, not just variants</div></div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">This week in one line</div>
+    <div class="headline">{{ brief.headline if brief else 'Weekly competitor creative read' }}</div>
+    {% if brief and brief.so_what %}
+      <ul class="sowhat">{% for b in brief.so_what %}<li><span class="n">{{ loop.index }}</span><span>{{ b }}</span></li>{% endfor %}</ul>
+    {% endif %}
+    {% if baseline %}<div class="baseline">First scan: "started" means launched in the last 7 days. Kills are tracked from next Monday.</div>{% endif %}
+  </div>
+
+  <section id="scoreboard">
+    <div class="sec-head"><span class="idx">01</span><div><h2>Scoreboard</h2>
+      <p>Rates are per brand, so a brand running 120 ads compares fairly with one running 400.</p></div></div>
+    <div class="card table-wrap">
+      <table class="score">
+        <thead><tr>
+          <th>Brand</th><th class="r">Live ads</th><th class="r">Started</th><th class="r">Refresh rate</th><th class="r">Killed</th>
+          <th class="r">Concepts</th><th class="r">Ads per concept</th><th class="r">Median age</th><th class="r">Video</th><th class="r">Offer-led</th><th>Posture</th>
+        </tr></thead>
+        <tbody>
+        {% for p in pages %}
+          {% set cr = reads.get(p.name) %}
+          <tr class="{{ 'you' if p.role == 'you' else '' }}">
+            <td class="brand-cell">{{ p.name }}{% if p.role == 'you' %}<span class="you-tag">YOU</span>{% endif %}
+              {% if p.trend | length > 1 %}{{ sparkline(p.trend) | safe }}{% endif %}</td>
+            <td class="r num">{{ p.active }}{% if not p.complete %}<span class="soft" title="More ads exist than the scan limit">+</span>{% endif %}</td>
+            <td class="r num up">+{{ p.new_count }}</td>
+            <td class="r num">{{ p.refresh_rate | pct }}</td>
+            <td class="r num">{% if p.baseline %}<span class="soft">Week 2</span>{% elif p.killed_count %}<span class="down">−{{ p.killed_count }}</span>{% else %}0{% endif %}</td>
+            <td class="r num">{{ p.n_concepts }}</td>
+            <td class="r num">{{ p.variants_per_concept }}</td>
+            <td class="r num">{{ p.median_age }}d</td>
+            <td class="r num">{{ p.video_share | pct }}</td>
+            <td class="r num">{{ p.offer_share | pct }}</td>
+            <td>{% if p.status != 'ok' %}<span class="chip dead">Not read this week</span>{% else %}<span class="chip solid">{{ cr.posture if cr and cr.posture else p.posture }}</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="snapshots">
+    <div class="sec-head"><span class="idx">02</span><div><h2>Competitor snapshots</h2>
+      <p>What each brand is arguing right now: its biggest angles, and the concepts it runs the most variants behind.</p></div></div>
+    <div class="snaps">
+    {% for p in pages if p.active %}
+      {% set cr = reads.get(p.name) %}
+      <div class="card snap {{ 'you' if p.role == 'you' else '' }}">
+        <div class="snap-head"><h3>{{ p.name }}{% if p.role == 'you' %}<span class="you-tag">YOU</span>{% endif %}</h3>
+          <span class="chip solid">{{ cr.posture if cr and cr.posture else p.posture }}</span></div>
+        {% if cr and cr.read %}<p class="read">{{ cr.read }}</p>{% endif %}
+        <div class="stats">
+          <div><b class="num">{{ p.n_concepts }}</b>concepts live</div>
+          <div><b class="num">{{ p.variants_per_concept }}</b>ads per concept</div>
+          <div><b class="num">{{ p.refresh_rate | pct }}</b>new this week</div>
+        </div>
+        <div class="snap-cols">
+          <div>
+            <div class="mini-title">Top angles</div>
+            {% for k, v in (p.mix.angle.items() | list)[:4] %}
+              <div class="abar" title="{{ angle_desc(k) }}"><div class="lbl"><span>{{ label(k) }}</span><span class="num muted">{{ v | pct }}</span></div>
+                <div class="track"><div class="fill" style="width: {{ (v * 100) | round(0) }}%"></div></div></div>
+            {% endfor %}
+          </div>
+          <div>
+            <div class="mini-title">Top concepts <span style="float:right">Variants</span></div>
+            <ul class="clist">
+            {% for c in (p.concepts | rejectattr('name', 'in', ['Unlabelled', 'One-off / unclear', 'Unclassified']) | list)[:5] %}
+              <li title="{{ c.summary }}"><span>{{ c.name }}{% if c.is_new %}<span class="nw">NEW</span>{% endif %}</span><span class="vc">{{ c.variants }}</span></li>
+            {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+  </section>
+
+  <section id="started">
+    <div class="sec-head"><span class="idx">03</span><div><h2>What they started</h2>
+      <p>New creatives, most viewed first. Green tags mark a brand-new concept; everything else is a new variant of an argument they already run.</p></div></div>
+    {% for p in pages if p.role == 'competitor' %}
+      <div class="brand-row">
+        <h3>{{ p.name }} <span class="count">+{{ p.new_count }}</span>
+          {% for c in p.new_concepts[:3] %}<span class="chip new">New concept: {{ c }}</span>{% endfor %}</h3>
+        {% if p.new_ads %}<div class="strip">{% for a in p.new_ads[:10] %}{{ adcard(a, 'new') }}{% endfor %}</div>
+        {% else %}<div class="empty">Nothing new this week.</div>{% endif %}
+      </div>
+    {% endfor %}
+  </section>
+
+  <section id="killed">
+    <div class="sec-head"><span class="idx">04</span><div><h2>What they killed</h2>
+      <p>Off in under 14 days means a failed test. Off after 45+ days means a winner that wore out. Both are lessons you did not pay for.</p></div></div>
+    {% if baseline %}<div class="empty">Starts next Monday. This first scan is the baseline every later week is compared against.</div>
+    {% else %}
+      {% for p in pages if p.role == 'competitor' %}
+        <div class="brand-row">
+          <h3>{{ p.name }} <span class="count">−{{ p.killed_count }}</span>
+            {% for c in p.dead_concepts[:3] %}<span class="chip dead">Dropped: {{ c }}</span>{% endfor %}</h3>
+          {% if p.killed_ads %}<div class="strip">{% for a in p.killed_ads[:10] %}{{ adcard(a, 'kill') }}{% endfor %}</div>
+          {% else %}<div class="empty">{% if p.complete %}Nothing switched off.{% else %}Too many live ads to read in full, so kills are not reported for this brand.{% endif %}</div>{% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </section>
+
+  <section id="winners">
+    <div class="sec-head"><span class="idx">05</span><div><h2>Likely winners</h2>
+      <p>Their longest-running live ads, with Meta's own ranking by views. Nobody pays for a losing ad for months.</p></div></div>
+    {% for p in pages if p.role == 'competitor' %}
+      <div class="brand-row">
+        <h3>{{ p.name }}</h3>
+        {% if p.winners %}<div class="strip">{% for a in p.winners %}{{ adcard(a, 'win') }}{% endfor %}</div>
+        {% else %}<div class="empty">No ad has run 21+ days. This brand rotates creative fast.</div>{% endif %}
+      </div>
+    {% endfor %}
+  </section>
+
+  <section id="map">
+    <div class="sec-head"><span class="idx">06</span><div><h2>Argument map</h2>
+      <p>The arguments your category is fighting over. Every competitor counts equally, whatever its ad volume, and your index shows where you lean in or hold back.</p></div></div>
+    <div class="card map">
+      <div class="mrow head"><div>Argument</div><div>Category share</div><div>Leader</div><div class="you-col">{{ brand }}</div></div>
+      {% set top = cat.fighting[0].avg if cat.fighting else 1 %}
+      {% for r in cat.fighting[:8] %}
+        <div class="mrow">
+          <div class="an" title="{{ angle_desc(r.angle) }}">{{ label(r.angle) }}</div>
+          <div class="bar"><div class="track"><div class="fill" style="width: {{ ((r.avg / top) * 100) | round(0) }}%"></div></div><span class="v">{{ r.avg | pct }}</span></div>
+          <div class="lead">{{ r.leader }}<span>{{ r.leader_share | pct }}</span></div>
+          <div class="you-col">{% if r.you is not none %}
+            {% set cls = 'over' if r.index and r.index >= 1.3 else ('under' if r.index is not none and r.index <= 0.7 else 'par') %}
+            <span class="idx-chip {{ cls }}">{{ r.you | pct }} <small>{% if r.index is none %}n/a{% elif cls == 'over' %}{{ r.index }}× more{% elif cls == 'under' %}{{ r.index }}× less{% else %}on par{% endif %}</small></span>
+          {% endif %}</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if cat.white_space %}
+      <div class="ws-grid">
+      {% for w in cat.white_space[:4] %}
+        <div class="ws">
+          <div class="who">White space · {% if w.users %}only {{ w.users | join(', ') }}{% else %}nobody{% endif %}</div>
+          <div class="t">{{ label(w.angle) }}</div>
+          <p>{{ ws_why.get(w.angle) or angle_desc(w.angle).split(': ', 1)[-1] | capitalize }}</p>
+        </div>
+      {% endfor %}
+      </div>
+    {% endif %}
+
+    <details class="more">
+      <summary>Show every brand across every argument</summary>
+      <div class="card table-wrap" style="margin-top:12px">
+        <table class="heat">
+          <thead><tr><th>Brand</th>{% for a in cat.angles %}<th title="{{ angle_desc(a) }}">{{ label(a) }}</th>{% endfor %}</tr></thead>
+          <tbody>
+          {% for p in pages if p.active %}
+            <tr class="{{ 'you' if p.role == 'you' else '' }}"><td class="brand-cell">{{ p.name }}</td>
+            {% for a in cat.angles %}{% set v = cat.heat[p.name][a] %}
+              {% set h = 0 if v < 0.05 else (1 if v < 0.15 else (2 if v < 0.3 else (3 if v < 0.5 else 4))) %}
+              <td><div class="cell h{{ h }}" title="{{ p.name }} · {{ label(a) }}: {{ v | pct }}">{{ v | pct if v >= 0.05 else '·' }}</div></td>
+            {% endfor %}</tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section id="mix">
+    <div class="sec-head"><span class="idx">07</span><div><h2>Formats and execution</h2>
+      <p>How each brand makes its ads, as a share of its own live ads.</p></div></div>
+    <div class="card mix">
+      {% for p in pages if p.active %}
+        <div class="fmt-row"><div class="brand-cell">{{ p.name }}</div><div class="stack">
+        {% for m in MEDIA_ORDER %}{% set v = p.mix.media.get(m, 0) %}{% if v %}
+          <span class="m-{{ m }}" style="flex: {{ v }}" title="{{ p.name }} · {{ label(m) }}: {{ v | pct }}">{{ v | pct if v >= 0.1 else '' }}</span>
+        {% endif %}{% endfor %}</div></div>
+      {% endfor %}
+      <div class="legend">{% for m in MEDIA_ORDER %}<span><i class="sw m-{{ m }}"></i>{{ label(m) }}</span>{% endfor %}</div>
+    </div>
+    <div class="card table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Brand</th><th>Most used hook</th><th>Most used style</th><th>Main offer</th><th>Main language</th></tr></thead>
+        <tbody>
+        {% for p in pages if p.active %}
+          {% set h = (p.mix.hook.items() | list) %}{% set st = (p.mix.style.items() | list) %}{% set of = (p.mix.offer.items() | list) %}{% set lg = (p.mix.language.items() | list) %}
+          <tr class="{{ 'you' if p.role == 'you' else '' }}"><td class="brand-cell">{{ p.name }}</td>
+            <td class="top-item">{% if h %}<b>{{ label(h[0][0]) }}</b><span>{{ h[0][1] | pct }}</span>{% endif %}</td>
+            <td class="top-item">{% if st %}<b>{{ label(st[0][0]) }}</b><span>{{ st[0][1] | pct }}</span>{% endif %}</td>
+            <td class="top-item">{% if of %}<b>{{ label(of[0][0]) }}</b><span>on {{ p.offer_share | pct }} of ads</span>{% else %}<span class="muted" style="margin:0">No offers</span>{% endif %}</td>
+            <td class="top-item">{% if lg %}<b>{{ label(lg[0][0]) }}</b><span>{{ lg[0][1] | pct }}</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% if brief and brief.tests %}
+  <section id="tests">
+    <div class="sec-head"><span class="idx">08</span><div><h2>Tests to brief this week</h2>
+      <p>Hypotheses, not copies. Each one is backed by a competitor signal above.</p></div></div>
+    <div class="tests">
+      {% for t in brief.tests %}
+      <div class="card test">
+        <div class="n"><b>TEST {{ loop.index }}</b><span class="chip">{{ label(t.angle_family) }}</span></div>
+        <div class="hook">“{{ t.hook }}”</div>
+        <div class="hyp">{{ t.hypothesis }}</div>
+        <dl><dt>Concept</dt><dd>{{ t.concept }}</dd><dt>Format</dt><dd>{{ t.format }}</dd><dt>Evidence</dt><dd>{{ t.evidence }}</dd></dl>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if brief and brief.ask_your_team %}
+  <section id="ask">
+    <div class="sec-head"><span class="idx">09</span><div><h2>What should you ask your team this week?</h2></div></div>
+    <ol class="ask">{% for q in brief.ask_your_team %}<li class="card">{{ q }}</li>{% endfor %}</ol>
+  </section>
+  {% endif %}
+
+  <section>
+    <div class="sec-head"><span class="idx">10</span><div><h2>How to read this?</h2></div></div>
+    <ul class="notes">
+      <li class="card"><b>How are winners picked?</b>Meta does not publish spend or ROAS for these ads. We use days live and Meta's own ranking by views: a strong proxy, not proof.</li>
+      <li class="card"><b>Concept or variant?</b>A concept is one argument. Variants are different executions of it. Claude groups them from each ad's copy and image, and names stay fixed week to week.</li>
+      <li class="card"><b>Why rates, not counts?</b>Brands run very different volumes. Every share is out of that brand's own ads, and category averages weight each competitor equally.</li>
+      <li class="card"><b>When is a kill reported?</b>Only when the brand's full ad list was read. A "+" after live ads means more ads exist than the scan limit.</li>
+      {% for n in notes %}<li class="card"><b>Note</b>{{ n }}</li>{% endfor %}
+    </ul>
+  </section>
+
+  <footer><span>Ad Radar · built on the public Meta Ad Library</span><span>Generated {{ generated }} · click any ad to open it in the Ad Library</span></footer>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, key = 'adradar-theme';
+  try { var s = localStorage.getItem(key); if (s) root.setAttribute('data-theme', s); } catch (e) {}
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme');
+    var dark = cur ? cur === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem(key, next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
