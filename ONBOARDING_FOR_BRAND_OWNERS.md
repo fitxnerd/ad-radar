@@ -12,7 +12,7 @@ The person who sent you this never sees any of it.
 
 Setup takes about 15 minutes, once. No coding needed.
 
-**Template link:** *[paste the template repo URL here before sending]*
+**Template link:** https://github.com/fitxnerd/ad-radar
 
 ---
 
@@ -24,7 +24,7 @@ Setup takes about 15 minutes, once. No coding needed.
 ---
 
 ### Step 1. Make your private copy (2 minutes)
-1. Open the template link above.
+1. Open https://github.com/fitxnerd/ad-radar
 2. Click the green **Use this template** button, then **Create a new repository**.
 3. Name it anything, for example `ad-radar`.
 4. Select **Private**. This keeps your competitive reads to yourself.
