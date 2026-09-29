@@ -27,12 +27,16 @@ BASE = "https://www.facebook.com/ads/library/"
 SCRIPT_JSON = re.compile(r'<script type="application/json"[^>]*>(.*?)</script>', re.S)
 
 
-def page_url(page_id: str, country: str) -> str:
+SORT_VIEWS = "total_impressions"          # "Impressions: high to low"
+SORT_RECENT = "relevancy_monthly_grouped"  # "Most recent"
+
+
+def page_url(page_id: str, country: str, sort: str = SORT_VIEWS, media: str = "all") -> str:
     q = {
         "active_status": "active", "ad_type": "all", "country": country,
-        "is_targeted_country": "false", "media_type": "all",
+        "is_targeted_country": "false", "media_type": media,
         "search_type": "page", "view_all_page_id": page_id,
-        "sort_data[mode]": "total_impressions", "sort_data[direction]": "desc",
+        "sort_data[mode]": sort, "sort_data[direction]": "desc",
     }
     return BASE + "?" + urllib.parse.urlencode(q)
 
@@ -201,11 +205,17 @@ class Scraper:
         for attempt in range(attempts):
             ctx, page = await self._new_page()
             gql: list[str] = []
+            self.trace: list[str] = []
 
             async def on_resp(r):
                 if "/api/graphql" in r.url:
                     try:
-                        gql.append(await r.text())
+                        body = await r.text()
+                        gql.append(body)
+                        post = r.request.post_data or ""
+                        name = re.search(r"fb_api_req_friendly_name=([^&]+)", post)
+                        self.trace.append(f"{r.status} {name.group(1) if name else '?'} {len(body)}b "
+                                          f"{re.sub(chr(92) + 's+', ' ', body)[:90]}")
                     except Exception:
                         pass
             page.on("response", on_resp)
@@ -258,12 +268,76 @@ class Scraper:
                          + (f" | sample: {sample}" if sample and not gql_with_ads else ""))
                 ads = [normalize(seen[a], i + 1) for i, a in enumerate(order)]
                 await ctx.close()
-                return {"ads": ads, "complete": complete, "status": "ok", "expected": expected}
+                limited = any("Rate limit" in t for t in self.trace)
+                return {"ads": ads, "complete": complete, "status": "ok", "expected": expected,
+                        "rate_limited": limited}
             except Exception as e:  # network hiccup, retry with a fresh context
                 self.log(f"    attempt {attempt + 1}: {type(e).__name__}: {str(e)[:120]}")
                 status = "error"
                 await ctx.close()
         return {"ads": [], "complete": False, "status": status}
+
+    async def fetch_page(self, page_id: str, country: str) -> dict:
+        """All live ads of one brand. Scrolls for the full list; where Meta rate-limits
+        scrolling (it does for cloud servers such as GitHub's), falls back to a sample
+        built only from first pages: newest and most viewed, overall and per format."""
+        res = await self.fetch(page_url(page_id, country))
+        if res["status"] != "ok" or res["complete"]:
+            for a in res["ads"]:
+                a["rank_known"] = True
+            res["mode"] = "full"
+            return res
+        order = {a["key"]: a for a in res["ads"]}
+        for a in order.values():
+            a["rank_known"] = True  # position in Meta's own sort by impressions
+        ctx, page = await self._new_page()
+        loads = 0
+        try:
+            slices = [(SORT_RECENT, "all")] + [(sort, media) for media in ("video", "meme", "image")
+                                                for sort in (SORT_VIEWS, SORT_RECENT)]
+            skip_media = set()
+            for sort, media in slices:
+                if media in skip_media or len(order) >= self.max_ads:
+                    continue
+                status, n = await self._load(page, page_url(page_id, country, sort, media))
+                loads += 1
+                if status != "ok" or not n:
+                    skip_media.add(media)
+                    continue
+                for i, raw in enumerate(_ads_from_html(await page.content())):
+                    ad = normalize(raw, len(order) + 1)
+                    ad["rank_known"] = False
+                    order.setdefault(ad["key"], ad)
+                if n <= 30:  # the first page already held every ad of this format
+                    skip_media.add(media)
+        finally:
+            await ctx.close()
+        ads = list(order.values())
+        expected = res.get("expected")
+        self.log(f"    scrolling was {'rate-limited' if res.get('rate_limited') else 'incomplete'}; "
+                 f"sampled {len(ads)} of ~{expected} live from {loads + 1} first pages")
+        return {"ads": ads, "status": "ok", "expected": expected, "mode": "sample",
+                "complete": expected is not None and len(ads) >= 0.85 * expected}
+
+    async def check_active(self, archive_ids: list[str]) -> dict[str, bool]:
+        """Open each ad's own Ad Library page and read whether it is still live."""
+        out: dict[str, bool] = {}
+        if not archive_ids:
+            return out
+        ctx, page = await self._new_page()
+        try:
+            for aid in archive_ids:
+                try:
+                    await page.goto(f"{BASE}?id={aid}", wait_until="load", timeout=60000)
+                    await page.wait_for_timeout(2500)
+                    raws = [r for r in _ads_from_html(await page.content()) if str(r["ad_archive_id"]) == aid]
+                    if raws:
+                        out[aid] = bool(raws[0].get("is_active"))
+                except Exception:
+                    pass  # unknown stays unknown; it gets checked again next week
+        finally:
+            await ctx.close()
+        return out
 
     async def resolve_page(self, name: str) -> dict | None:
         """Find the page ID for a brand name via keyword search: the page whose

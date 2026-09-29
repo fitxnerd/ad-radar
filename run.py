@@ -21,7 +21,7 @@ import yaml
 
 from radar import analyze, classify, render, store
 from radar.llm import LLMError
-from radar.scrape import Scraper, download_thumb, page_id_from, page_url
+from radar.scrape import Scraper, download_thumb, page_id_from
 
 ROOT = Path(__file__).resolve().parent
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -31,6 +31,7 @@ BRIEF_MODEL = os.environ.get("BRIEF_MODEL", "sonnet")
 MAX_ADS = int(os.environ.get("MAX_ADS_PER_BRAND", "400"))
 MAX_CLASSIFY = int(os.environ.get("MAX_CLASSIFY_PER_BRAND", "250"))
 PARALLEL = int(os.environ.get("CLAUDE_PARALLEL", "3"))
+CHECK_LIMIT = int(os.environ.get("KILL_CHECKS_PER_BRAND", "25"))
 
 
 def log(*a):
@@ -74,7 +75,7 @@ async def scrape_all(cfg: dict, state: dict, today: str, thumbs: Path) -> dict:
                     continue
                 pid = hit["page_id"]
                 log(f"    resolved to page '{hit['page_name']}' ({pid})")
-            res = await s.fetch(page_url(pid, cfg["country"]))
+            res = await s.fetch_page(pid, cfg["country"])
             p["page_id"] = pid
             p["status"] = res["status"]
             if res["status"] != "ok":
@@ -84,12 +85,21 @@ async def scrape_all(cfg: dict, state: dict, today: str, thumbs: Path) -> dict:
                 own = [a["page_name"] for a in res["ads"] if a["page_id"] == pid] or [a["page_name"] for a in res["ads"]]
                 p["page_name"] = Counter(own).most_common(1)[0][0]
             state["pages"][p["label"]] = {"page_id": pid, "page_name": p.get("page_name")}
-            diff = store.merge_page(state, pid, res["ads"], res["complete"], today)
-            diff["complete"] = res["complete"]
+            checked = {}
+            if not res["complete"]:  # a sample can't show kills by absence; check missing ads one by one
+                cands = store.missing_candidates(state, pid, res["ads"], CHECK_LIMIT)
+                verdicts = await s.check_active([a["ad_archive_id"] for a in cands])
+                checked = {a["key"]: verdicts[a["ad_archive_id"]] for a in cands if a["ad_archive_id"] in verdicts}
+                if cands:
+                    log(f"    checked {len(checked)} ads missing from the sample: "
+                        f"{sum(1 for v in checked.values() if not v)} switched off, "
+                        f"{sum(1 for v in checked.values() if v)} still live")
+            diff = store.merge_page(state, pid, res["ads"], res["complete"], today, checked)
+            diff.update(complete=res["complete"], expected=res.get("expected"), mode=res.get("mode", "full"))
             runs[pid] = diff
             got = sum(download_thumb(a["thumb_url"], thumbs / f"{a['key']}.jpg") for a in res["ads"])
-            log(f"    {len(res['ads'])} live ads ({'complete' if res['complete'] else 'capped'}), "
-                f"{len(diff['new'])} unseen before, {len(diff['killed'])} gone, {got} thumbnails")
+            log(f"    {len(res['ads'])} ads read ({'full list' if res['complete'] else 'sample of ~' + str(res.get('expected'))}), "
+                f"{len(diff['new'])} unseen before, {len(diff['killed'])} switched off, {got} thumbnails")
     return runs
 
 

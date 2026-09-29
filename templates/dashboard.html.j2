@@ -262,7 +262,7 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line);
     {% if a | tag('hook_text') %}<div class="hook">“{{ a | tag('hook_text') }}”</div>{% endif %}
     <div class="meta">
       {% if a | tag('angle_family') %}<span class="chip" title="{{ angle_desc(a | tag('angle_family')) }}">{{ label(a | tag('angle_family')) }}</span>{% endif %}
-      {% if kind == 'win' or kind == 'new' %}<span class="chip" title="Position in Meta's own sort by impressions, for this brand">#{{ a.impression_rank }} by views</span>{% endif %}
+      {% if (kind == 'win' or kind == 'new') and a.rank_known is not sameas false %}<span class="chip" title="Position in Meta's own sort by impressions, for this brand">#{{ a.impression_rank }} by views</span>{% endif %}
       {% if a.versions and a.versions > 1 %}<span class="chip" title="Meta shows this creative running as {{ a.versions }} ads">×{{ a.versions }}</span>{% endif %}
     </div>
   </div>
@@ -322,7 +322,7 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line);
           <tr class="{{ 'you' if p.role == 'you' else '' }}">
             <td class="brand-cell">{{ p.name }}{% if p.role == 'you' %}<span class="you-tag">YOU</span>{% endif %}
               {% if p.trend | length > 1 %}{{ sparkline(p.trend) | safe }}{% endif %}</td>
-            <td class="r num">{{ p.active }}{% if not p.complete %}<span class="soft" title="More ads exist than the scan limit">+</span>{% endif %}</td>
+            <td class="r num">{{ p.active }}{% if p.sampled %}<span class="soft" title="Meta's live count. Tags and mix come from a sample of {{ p.read }} ads: the newest and the most viewed.">*</span>{% endif %}</td>
             <td class="r num up">+{{ p.new_count }}</td>
             <td class="r num">{{ p.refresh_rate | pct }}</td>
             <td class="r num">{% if p.baseline %}<span class="soft">Week 2</span>{% elif p.killed_count %}<span class="down">−{{ p.killed_count }}</span>{% else %}0{% endif %}</td>
@@ -399,7 +399,7 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line);
           <h3>{{ p.name }} <span class="count">−{{ p.killed_count }}</span>
             {% for c in p.dead_concepts[:3] %}<span class="chip dead">Dropped: {{ c }}</span>{% endfor %}</h3>
           {% if p.killed_ads %}<div class="strip">{% for a in p.killed_ads[:10] %}{{ adcard(a, 'kill') }}{% endfor %}</div>
-          {% else %}<div class="empty">{% if p.complete %}Nothing switched off.{% else %}Too many live ads to read in full, so kills are not reported for this brand.{% endif %}</div>{% endif %}
+          {% else %}<div class="empty">Nothing switched off.</div>{% endif %}
         </div>
       {% endfor %}
     {% endif %}
@@ -527,7 +527,8 @@ footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line);
       <li class="card"><b>How are winners picked?</b>Meta does not publish spend or ROAS for these ads. We use days live and Meta's own ranking by views: a strong proxy, not proof.</li>
       <li class="card"><b>Concept or variant?</b>A concept is one argument. Variants are different executions of it. Claude groups them from each ad's copy and image, and names stay fixed week to week.</li>
       <li class="card"><b>Why rates, not counts?</b>Brands run very different volumes. Every share is out of that brand's own ads, and category averages weight each competitor equally.</li>
-      <li class="card"><b>When is a kill reported?</b>Only when the brand's full ad list was read. A "+" after live ads means more ads exist than the scan limit.</li>
+      <li class="card"><b>When is a kill reported?</b>Only when an ad is gone from the brand's full list, or when its own Ad Library page confirms it is switched off. A missing ad is never assumed dead.</li>
+      {% if pages | selectattr('sampled') | list %}<li class="card"><b>What does * mean?</b>For brands marked *, Meta limited how much of the list could be read. Live counts are Meta's own; tags, angles and concepts come from a sample of their newest and most viewed ads.</li>{% endif %}
       {% for n in notes %}<li class="card"><b>Note</b>{{ n }}</li>{% endfor %}
     </ul>
   </section>

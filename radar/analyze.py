@@ -60,7 +60,8 @@ def analyze_page(state: dict, page: dict, run: dict, today: str) -> dict:
     t = date.fromisoformat(today)
     pid = page["page_id"]
     all_ads = [a for a in state["ads"].values() if a["page_id"] == pid]
-    active = [a for a in all_ads if a.get("active")]
+    # Live this week = seen in this week's list, or confirmed live on its own page.
+    active = [a for a in all_ads if a.get("active") and a.get("last_seen") == today]
     for a in all_ads:
         a["days"] = _days(a, date.fromisoformat(a["ended_on"]) if a.get("ended_on") else t)
 
@@ -74,6 +75,8 @@ def analyze_page(state: dict, page: dict, run: dict, today: str) -> dict:
         a["verdict"] = killed_verdict(a["days"])
 
     tagged = [a for a in active if a.get("tags")]
+    # Meta's own "~N results" is the true live count when only a sample could be read.
+    live_total = max(run.get("expected") or 0, len(active)) if not run.get("complete", True) else len(active)
     by_concept = defaultdict(list)
     for a in tagged:
         by_concept[_tag(a, "concept", "Unclassified")].append(a)
@@ -114,9 +117,10 @@ def analyze_page(state: dict, page: dict, run: dict, today: str) -> dict:
         "name": page["label"], "page_name": page.get("page_name"), "page_id": pid, "role": page["role"],
         "complete": run.get("complete", True), "baseline": run.get("baseline", False),
         "status": run.get("status", "ok"),
-        "active": len(active), "new_count": len(new), "killed_count": len(killed),
-        "refresh_rate": round(len(new) / max(len(active), 1), 3),
-        "churn_rate": round(len(killed) / max(len(active) + len(killed), 1), 3),
+        "active": live_total, "read": len(active), "sampled": not run.get("complete", True),
+        "new_count": len(new), "killed_count": len(killed),
+        "refresh_rate": round(len(new) / max(live_total, 1), 3),
+        "churn_rate": round(len(killed) / max(live_total + len(killed), 1), 3),
         "n_concepts": n_concepts,
         "variants_per_concept": round(len(tagged) / max(n_concepts, 1), 1),
         "tagged": len(tagged), "untagged": len(active) - len(tagged),

@@ -128,6 +128,7 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 | `MAX_ADS_PER_BRAND` | `400` | Stop scrolling a page after this many ads |
 | `MAX_CLASSIFY_PER_BRAND` | `250` | New ads tagged per brand per week, this week's and long-running ads first; the rest carry over |
 | `CLAUDE_PARALLEL` | `3` | Brands tagged at once (each Claude call takes a minute or two) |
+| `KILL_CHECKS_PER_BRAND` | `25` | In sample mode, how many missing ads get their own page checked for "switched off" each week |
 
 ## Running locally
 ```bash
@@ -142,6 +143,13 @@ GitHub's servers, `scripts/schedule_on_mac.sh` schedules the same run on your Ma
 every Monday at 08:00.
 
 ## Honest limits
+- **On cloud servers Meta limits how much of a list can be read.** Scrolling for more
+  ads is rate-limited for GitHub's servers, so there Ad Radar reads a **sample**: each
+  brand's newest ads and most viewed ads, overall and per format (typically 40 to 50%
+  of a brand's live ads, and all of its newest launches). Live counts still come from
+  Meta's own "~N results", and a kill is only reported once the ad's own page confirms
+  it is off. Brands read this way are marked * in the dashboard. On a home connection
+  (see **Running locally**) the full list is read.
 - **No spend or ROAS.** Meta does not publish them for commercial ads in India.
   "Winner" means long-running and high on Meta's own ranking by views. That is a
   strong proxy, not ground truth.
