@@ -174,17 +174,26 @@ class Scraper:
         await page.wait_for_timeout(4000)
         return ctx, page
 
-    async def _load(self, page, url) -> str:
-        """Navigate and wait until the result count or the empty state renders."""
+    async def _load(self, page, url) -> tuple[str, int | None]:
+        """Navigate and wait until the result count or the empty state renders.
+        Returns (status, the "~N results" count Meta shows, if any)."""
         await page.goto(url, wait_until="load", timeout=90000)
         for _ in range(25):
             await page.wait_for_timeout(1500)
             txt = await page.inner_text("body")
-            if re.search(r"~?[\d,.]+K?\s+results?", txt):
-                return "ok"
+            m = re.search(r"~?([\d,.]+)(K?)\s+results?", txt)
+            if m:
+                n = float(m.group(1).replace(",", ""))
+                return "ok", int(n * 1000 if m.group(2) else n)
             if "No ads match" in txt:
-                return "empty"
-        return "timeout"
+                return "empty", 0
+        return "timeout", None
+
+    async def _scroll(self, page) -> None:
+        """Nudge the infinite scroll three ways: some environments only react to one."""
+        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        await page.mouse.wheel(0, 6000)
+        await page.keyboard.press("End")
 
     async def fetch(self, url: str, attempts: int = 3) -> dict:
         """Return {"ads": [normalized...], "complete": bool, "status": str}."""
@@ -201,7 +210,7 @@ class Scraper:
                         pass
             page.on("response", on_resp)
             try:
-                status = await self._load(page, url)
+                status, expected = await self._load(page, url)
                 if status != "ok":
                     self.log(f"    attempt {attempt + 1}: {status}")
                     await ctx.close()
@@ -217,23 +226,39 @@ class Scraper:
                             order.append(aid)
 
                 absorb(_ads_from_html(await page.content()))
-                stale, complete = 0, False
+                from_html = len(order)
+                gql_seen, gql_with_ads, sample = 0, 0, ""
+                stale, exhausted = 0, False
                 while len(order) < self.max_ads:
                     before = len(order)
-                    await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                    await page.wait_for_timeout(2500)
+                    await self._scroll(page)
+                    await page.wait_for_timeout(3000)
                     while gql:
-                        absorb(_ads_from_graphql(gql.pop(0)))
+                        body = gql.pop(0)
+                        gql_seen += 1
+                        found = _ads_from_graphql(body)
+                        if found:
+                            gql_with_ads += 1
+                        elif not sample and "ad_library" in body.lower():
+                            sample = re.sub(r"\s+", " ", body)[:160]
+                        absorb(found)
                     if len(order) == before:
                         stale += 1
-                        if stale >= 4:
-                            complete = True
+                        if stale >= 5:
+                            exhausted = True
                             break
                     else:
                         stale = 0
+                # Only trust "we saw everything" when the count matches what Meta says is live;
+                # otherwise a stalled scroll would make every unseen ad look "killed".
+                complete = exhausted and (expected is None or len(order) >= 0.85 * expected)
+                self.log(f"    read {len(order)} of ~{expected if expected is not None else '?'} live "
+                         f"({from_html} from page, {len(order) - from_html} from {gql_with_ads}/{gql_seen} "
+                         f"scroll responses){'' if complete else ', list incomplete'}"
+                         + (f" | sample: {sample}" if sample and not gql_with_ads else ""))
                 ads = [normalize(seen[a], i + 1) for i, a in enumerate(order)]
                 await ctx.close()
-                return {"ads": ads, "complete": complete, "status": "ok"}
+                return {"ads": ads, "complete": complete, "status": "ok", "expected": expected}
             except Exception as e:  # network hiccup, retry with a fresh context
                 self.log(f"    attempt {attempt + 1}: {type(e).__name__}: {str(e)[:120]}")
                 status = "error"
